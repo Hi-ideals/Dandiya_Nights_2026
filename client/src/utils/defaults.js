@@ -13,8 +13,8 @@ export const DEFAULT_CONFIG = {
     venue: 'Jhira Function Hall, Bidar',
     venueMapUrl: '',
     organizer: 'Team Agni - Bidar Vibes KA38',
-    contactPhone: '+91 90000 00000',
-    contactEmail: 'info@example.com',
+    contactPhone: '+91 63625 82268',
+    contactEmail: 'arthotthana@gmail.com',
     competitionTheme: 'Devi Mata',
     prizes: { first: '₹3,100', second: '₹2,100' },
     sponsors: [
@@ -26,6 +26,7 @@ export const DEFAULT_CONFIG = {
       'Trishul Brand',
       'Sudama Pohe',
       'Vintage Retreat Resort',
+      'Hi-Ideals Technologies Pvt. Ltd.',
     ],
     registrationOpen: true,
   },

@@ -44,7 +44,9 @@ export async function buildRegistrationsWorkbook(filters) {
   const regSheet = workbook.addWorksheet('Registrations');
   regSheet.columns = [
     { header: 'Registration No.', key: 'registrationNumber', width: 16 },
+    { header: 'Registration Type', key: 'type', width: 18 },
     { header: 'Participant Name', key: 'fullName', width: 26 },
+    { header: 'Gender', key: 'gender', width: 9 },
     { header: 'Email', key: 'email', width: 28 },
     { header: 'Mobile Number', key: 'mobileNumber', width: 15 },
     { header: 'Address', key: 'address', width: 40 },
@@ -62,11 +64,13 @@ export async function buildRegistrationsWorkbook(filters) {
   rows.forEach((row) => {
     const added = regSheet.addRow({
       registrationNumber: row.registrationNumber,
+      type: row.type === 'competition' ? 'Rangoli/Drawing' : 'Dandiya Night',
       fullName: safeCell(row.fullName),
+      gender: row.gender ? row.gender[0].toUpperCase() + row.gender.slice(1) : '',
       email: safeCell(row.email ?? ''),
       mobileNumber: safeCell(row.mobileNumber),
       address: safeCell(row.address),
-      category: row.category === 'couple' ? 'Couple' : 'Single',
+      category: row.type === 'competition' ? '-' : row.category === 'couple' ? 'Couple' : 'Single',
       ticketQuantity: row.ticketQuantity,
       competitions: competitionLabel(row),
       createdAt: toIstWallClock(row.createdAt),
@@ -121,11 +125,13 @@ export async function buildRegistrationsWorkbook(filters) {
   ];
   [
     ['Total registrations', s.totalRegistrations],
+    ['Dandiya Night registrations', s.dandiyaRegistrations],
+    ['Rangoli/Drawing registrations', s.competitionRegistrations],
     ['Confirmed (successful payments)', s.confirmedRegistrations],
     ['Pending payments', s.pendingPayments],
     ['Failed payments', s.failedPayments],
     ['Cancelled payments', s.cancelledPayments],
-    ['Total tickets (confirmed)', s.totalTicketsBooked],
+    ['Dandiya tickets (confirmed)', s.totalTicketsBooked],
     ['Couple tickets', s.coupleTickets],
     ['Single tickets', s.singleTickets],
     ['Rangoli Competition participants', s.rangoliParticipants],
@@ -133,8 +139,13 @@ export async function buildRegistrationsWorkbook(filters) {
     ['Tickets checked in', s.ticketsCheckedIn],
     ['Tickets remaining', s.ticketsRemaining],
   ].forEach(([metric, value]) => sumSheet.addRow({ metric, value }));
-  const revenueRow = sumSheet.addRow({ metric: 'Verified revenue', value: paiseToRupees(s.verifiedRevenuePaise) });
-  revenueRow.getCell('value').numFmt = INR_FORMAT;
+  [
+    ['Verified revenue (total)', s.verifiedRevenuePaise],
+    ['Verified revenue - Dandiya Night', s.dandiyaRevenuePaise],
+    ['Verified revenue - Rangoli/Drawing', s.competitionRevenuePaise],
+  ].forEach(([metric, paise]) => {
+    sumSheet.addRow({ metric, value: paiseToRupees(paise) }).getCell('value').numFmt = INR_FORMAT;
+  });
   sumSheet.addRow({});
   sumSheet.addRow({ metric: 'Generated at (IST)', value: toIstWallClock(new Date()) }).getCell('value').numFmt = DATE_FORMAT;
   const activeFilters = Object.entries(filters).filter(([, v]) => v !== undefined && v !== '');

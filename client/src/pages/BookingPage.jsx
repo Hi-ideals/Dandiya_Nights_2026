@@ -8,7 +8,15 @@ import { useConfig } from '../hooks/useConfig';
 import { usePayment } from '../hooks/usePayment';
 import PricingBreakdown from '../components/PricingBreakdown';
 import { EmptyState, PageLoader, Spinner, StatusBadge } from '../components/ui';
-import { categoryLabel, competitionsLabel, formatDateTime, formatINR } from '../utils/format';
+import {
+  TICKET_TYPE_LABELS,
+  categoryLabel,
+  competitionsLabel,
+  formatDateTime,
+  formatINR,
+  genderLabel,
+  registrationTypeLabel,
+} from '../utils/format';
 
 function Detail({ label, children, mono }) {
   return (
@@ -31,7 +39,9 @@ function TicketCard({ ticket, index, total, onDownload, downloading, event, cate
       <div className="flex flex-col items-center p-5">
         <img src={ticket.qrDataUrl} alt={`QR code for ticket ${ticket.ticketNumber}`} className="h-44 w-44" />
         <p className="mt-3 font-mono text-lg font-bold tracking-wide text-maroon-800">{ticket.ticketNumber}</p>
-        <p className="text-xs text-stone-500">{categoryLabel(category)} entry</p>
+        <p className="mt-1 rounded-full bg-maroon-50 px-3 py-1 text-center text-xs font-semibold text-maroon-800">
+          {TICKET_TYPE_LABELS[ticket.ticketType ?? category] ?? `${categoryLabel(category)} entry`}
+        </p>
         <div className="mt-2">
           {ticket.checkedIn ? (
             <StatusBadge status="checked_in" label={`Checked in ${formatDateTime(ticket.checkedInAt)}`} />
@@ -146,7 +156,9 @@ export default function BookingPage() {
             {state?.justPaid ? 'Registration successful!' : 'Your tickets are ready'}
           </h1>
           <p className="mt-2 text-white/80">
-            See you at {event.name}, {booking.fullName.split(' ')[0]}! Show the QR code of each ticket at the entry gate.
+            {booking.type === 'competition'
+              ? `See you at the competition, ${booking.fullName.split(' ')[0]}! ${event.competitionTime}. Show the QR code at the registration desk.`
+              : `See you at ${event.name}, ${booking.fullName.split(' ')[0]}! Show the QR code of each ticket at the entry gate.`}
           </p>
           <div className="mt-6 flex flex-col justify-center gap-2 sm:flex-row">
             <button type="button" className="btn-primary" onClick={() => download(null)} disabled={Boolean(downloading)}>
@@ -187,9 +199,18 @@ export default function BookingPage() {
             </Detail>
             <Detail label="Participant name">{booking.fullName}</Detail>
             <Detail label="Mobile number">+91 {booking.mobileNumber}</Detail>
-            <Detail label="Category">{categoryLabel(booking.category)}</Detail>
-            <Detail label="Tickets booked">{booking.ticketQuantity}</Detail>
-            <Detail label="Competitions">{competitionsLabel(booking)}</Detail>
+            <Detail label="Registration for">{registrationTypeLabel(booking.type)}</Detail>
+            {booking.type === 'competition' ? (
+              <>
+                <Detail label="Gender">{genderLabel(booking.gender)}</Detail>
+                <Detail label="Competition">{competitionsLabel(booking)}</Detail>
+              </>
+            ) : (
+              <>
+                <Detail label="Category">{categoryLabel(booking.category)}</Detail>
+                <Detail label="Tickets booked">{booking.ticketQuantity}</Detail>
+              </>
+            )}
             <Detail label={paid ? 'Total amount paid' : 'Amount due'}>
               {formatINR(paid ? booking.amountPaidPaise : booking.totalAmountPaise)}
             </Detail>

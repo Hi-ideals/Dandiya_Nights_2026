@@ -1,5 +1,5 @@
 import { getDb } from '../config/firebase.js';
-import { COLLECTIONS, PAYMENT_STATUS } from '../config/constants.js';
+import { COLLECTIONS, PAYMENT_STATUS, registrationType } from '../config/constants.js';
 import { notFound } from '../utils/AppError.js';
 import { istDayEnd, istDayStart, toDate, toIso } from '../utils/format.js';
 import { breakdownFromRegistration } from './registration.service.js';
@@ -86,6 +86,12 @@ function matchesSearch(reg, q) {
   );
 }
 
+/** In-memory filters (search, registration type, competition). Legacy bookings count as Dandiya. */
+const matchesFilters = (reg, filters) =>
+  (!filters.type || registrationType(reg) === filters.type) &&
+  matchesCompetition(reg, filters.competition) &&
+  matchesSearch(reg, filters.q);
+
 function checkInSummary(tickets = []) {
   const checkedIn = tickets.filter((t) => t.checkedIn).length;
   let state = 'none';
@@ -98,10 +104,12 @@ export function toAdminRow(reg, tickets = []) {
   return {
     id: reg.id ?? reg.registrationNumber,
     registrationNumber: reg.registrationNumber,
+    type: registrationType(reg),
     createdAt: toIso(reg.createdAt),
     paidAt: toIso(reg.paidAt),
     fullName: reg.fullName,
     email: reg.email ?? null,
+    gender: reg.gender ?? null,
     mobileNumber: reg.mobileNumber,
     address: reg.address,
     category: reg.category,
@@ -118,6 +126,7 @@ export function toAdminRow(reg, tickets = []) {
     checkIn: checkInSummary(tickets),
     tickets: tickets.map((t) => ({
       ticketNumber: t.ticketNumber,
+      ticketType: t.ticketType ?? t.category,
       status: t.status,
       checkedIn: t.checkedIn,
       checkedInAt: toIso(t.checkedInAt),
@@ -129,7 +138,7 @@ export function toAdminRow(reg, tickets = []) {
 /** Filtered rows (with tickets) shared by the list view and the Excel export. */
 export async function queryRegistrationRows(filters, { allTickets = false } = {}) {
   const regs = (await fetchRegistrations(filters)).filter(
-    (reg) => matchesCompetition(reg, filters.competition) && matchesSearch(reg, filters.q),
+    (reg) => matchesFilters(reg, filters),
   );
   const ticketMap = allTickets
     ? await fetchAllTickets()
@@ -147,7 +156,7 @@ export async function listRegistrations(filters) {
     return paginate(rows, page, pageSize);
   }
   const regs = (await fetchRegistrations(filters)).filter(
-    (reg) => matchesCompetition(reg, filters.competition) && matchesSearch(reg, filters.q),
+    (reg) => matchesFilters(reg, filters),
   );
   const { items, pagination } = paginate(regs, page, pageSize);
   const ticketMap = await fetchTicketsByRegistration(items.map((r) => r.registrationNumber));
@@ -196,10 +205,15 @@ export async function getRegistrationDetail(registrationId) {
   };
 }
 
-/** Summary figures computed from the underlying records; revenue counts verified payments only. */
+/**
+ * Summary figures computed from the underlying records; revenue counts verified payments only.
+ * Dandiya tickets and competition entries are counted separately.
+ */
 export function summarize(rows) {
   const s = {
     totalRegistrations: rows.length,
+    dandiyaRegistrations: 0,
+    competitionRegistrations: 0,
     confirmedRegistrations: 0,
     pendingPayments: 0,
     failedPayments: 0,
@@ -210,19 +224,31 @@ export function summarize(rows) {
     rangoliParticipants: 0,
     drawingParticipants: 0,
     verifiedRevenuePaise: 0,
+    dandiyaRevenuePaise: 0,
+    competitionRevenuePaise: 0,
     ticketsCheckedIn: 0,
     ticketsRemaining: 0,
   };
 
   rows.forEach((row) => {
+    const competition = row.type === 'competition';
+    if (competition) s.competitionRegistrations += 1;
+    else s.dandiyaRegistrations += 1;
+
     if (row.paymentStatus === PAYMENT_STATUS.paid) {
       s.confirmedRegistrations += 1;
-      s.totalTicketsBooked += row.ticketQuantity;
-      if (row.category === 'couple') s.coupleTickets += row.ticketQuantity;
-      else s.singleTickets += row.ticketQuantity;
-      if (row.rangoliSelected) s.rangoliParticipants += 1;
-      if (row.drawingSelected) s.drawingParticipants += 1;
+      if (!competition) {
+        s.totalTicketsBooked += row.ticketQuantity;
+        if (row.category === 'couple') s.coupleTickets += row.ticketQuantity;
+        else s.singleTickets += row.ticketQuantity;
+      }
+      // Competition bookings carry one ticket per participant; legacy combined bookings count once.
+      const participants = competition ? row.ticketQuantity : 1;
+      if (row.rangoliSelected) s.rangoliParticipants += participants;
+      if (row.drawingSelected) s.drawingParticipants += participants;
       s.verifiedRevenuePaise += row.amountPaidPaise;
+      if (competition) s.competitionRevenuePaise += row.amountPaidPaise;
+      else s.dandiyaRevenuePaise += row.amountPaidPaise;
       s.ticketsCheckedIn += row.checkIn.checkedIn;
       s.ticketsRemaining += row.checkIn.total - row.checkIn.checkedIn;
     } else if (row.paymentStatus === PAYMENT_STATUS.failed) s.failedPayments += 1;

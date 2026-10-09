@@ -1,5 +1,11 @@
 import PDFDocument from 'pdfkit';
 import { formatInr, formatIstDateTime } from '../utils/format.js';
+import { TICKET_TYPE_LABELS } from '../config/constants.js';
+
+const isCompetitionTicket = (ticket) => ['rangoli', 'drawing'].includes(ticket.ticketType);
+
+/** Competition tickets show the competition session time; Dandiya tickets the night. */
+const ticketTime = (event, ticket) => (isCompetitionTicket(ticket) ? event.competitionTime : event.time);
 
 const COLORS = {
   maroon: '#7a1035',
@@ -22,7 +28,7 @@ function competitionsText(reg) {
   return list.length ? list.join(' & ') : 'None';
 }
 
-function drawHeader(doc, event) {
+function drawHeader(doc, event, ticket) {
   const { width } = doc.page;
   const headerHeight = 150;
 
@@ -40,7 +46,7 @@ function drawHeader(doc, event) {
         .fillColor('#fde68a')
         .font('Helvetica-Bold')
         .fontSize(9.5)
-        .text(`${event.date}  |  ${event.time}`, 0, bandHeight + 9, { width, align: 'center', lineBreak: false });
+        .text(`${event.date}  |  ${ticketTime(event, ticket)}`, 0, bandHeight + 9, { width, align: 'center', lineBreak: false });
       return bandHeight + 28;
     } catch {
       // Unreadable poster: fall through to the drawn header.
@@ -64,7 +70,7 @@ function drawHeader(doc, event) {
   doc
     .font('Helvetica')
     .fontSize(9.5)
-    .text(`${event.date}  |  ${event.time}`, 28, headerHeight - 20, { width: width - 56, lineBreak: false });
+    .text(`${event.date}  |  ${ticketTime(event, ticket)}`, 28, headerHeight - 20, { width: width - 56, lineBreak: false });
 
   return headerHeight;
 }
@@ -80,7 +86,7 @@ function drawTicket(doc, { event, registration: reg, ticket }) {
   doc.page.margins.bottom = 0;
   const left = 28;
   const contentWidth = width - 56;
-  let y = drawHeader(doc, event) + 16;
+  let y = drawHeader(doc, event, ticket) + 16;
 
   doc.fillColor(COLORS.muted).font('Helvetica').fontSize(8.5).text(event.venue, left, y, { width: contentWidth });
   y += 22;
@@ -102,8 +108,10 @@ function drawTicket(doc, { event, registration: reg, ticket }) {
   const rows = [
     ['Participant', reg.fullName],
     ['Mobile', `+91 ${reg.mobileNumber}`],
-    ['Category', reg.category === 'couple' ? 'Couple (admits 2)' : 'Single (admits 1)'],
-    ['Competitions', competitionsText(reg)],
+    ['Ticket for', TICKET_TYPE_LABELS[ticket.ticketType ?? reg.category] ?? '-'],
+    isCompetitionTicket(ticket)
+      ? ['Gender', reg.gender ? reg.gender[0].toUpperCase() + reg.gender.slice(1) : '-']
+      : ['Competitions', competitionsText(reg)],
     ['Registration No.', reg.registrationNumber],
   ];
   rows.forEach(([label, value], i) => field(doc, label, value, left, y + i * rowGap, colWidth));

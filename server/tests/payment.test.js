@@ -24,11 +24,12 @@ const capturedEvent = (payment) => ({
 
 describe('create-order', () => {
   it('creates a Razorpay order for the server-calculated amount', async () => {
-    const { number, token } = await ctx.register({ category: 'couple', ticketQuantity: 1, rangoliSelected: true });
+    const { number, token } = await ctx.register({ category: 'couple', ticketQuantity: 1 });
     const res = await ctx.createOrder(number, token);
     expect(res.status).toBe(200);
-    expect(res.body).toMatchObject({ amountPaise: 63000, currency: 'INR', keyId: 'rzp_test_dummy' });
-    expect(ctx.razorpay.orders.get(res.body.orderId).amount).toBe(63000);
+    expect(res.body).toMatchObject({ amountPaise: 52000, currency: 'INR', keyId: 'rzp_test_dummy' });
+    expect(res.body.description).toMatch(/Couple Dandiya/);
+    expect(ctx.razorpay.orders.get(res.body.orderId).amount).toBe(52000);
     expect(ctx.db.get('payments', res.body.orderId)).toMatchObject({ registrationId: number, status: 'created' });
   });
 

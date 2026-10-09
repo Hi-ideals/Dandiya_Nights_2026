@@ -4,9 +4,9 @@ import { AlertCircle, Search, SearchX, X } from 'lucide-react';
 import { adminApi, errorMessage } from '../../services/api';
 import ExportMenu from '../../components/ExportMenu';
 import { EmptyState, Pagination, Spinner, StatusBadge } from '../../components/ui';
-import { categoryLabel, formatDateTime, formatINR } from '../../utils/format';
+import { categoryLabel, formatDateTime, formatINR, genderLabel, registrationTypeLabel } from '../../utils/format';
 
-const FILTER_KEYS = ['q', 'category', 'paymentStatus', 'competition', 'checkIn', 'from', 'to'];
+const FILTER_KEYS = ['q', 'type', 'category', 'paymentStatus', 'competition', 'checkIn', 'from', 'to'];
 
 function Select({ label, value, onChange, options }) {
   return (
@@ -96,7 +96,13 @@ export default function RegistrationsPage() {
             aria-label="Search registrations"
           />
         </div>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-7">
+          <Select
+            label="Registration"
+            value={filters.type}
+            onChange={(v) => update({ type: v })}
+            options={[['', 'All'], ['dandiya', 'Dandiya Night'], ['competition', 'Rangoli / Drawing']]}
+          />
           <Select
             label="Payment status"
             value={filters.paymentStatus}
@@ -173,13 +179,15 @@ export default function RegistrationsPage() {
         ) : (
           <>
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[1400px] text-left text-sm">
+              <table className="w-full min-w-[1600px] text-left text-sm">
                 <thead className="bg-stone-50 text-xs text-stone-500 uppercase">
                   <tr>
                     {[
                       'Reg. No.',
                       'Registered',
+                      'Type',
                       'Name',
+                      'Gender',
                       'Mobile',
                       'Address',
                       'Category',
@@ -208,7 +216,17 @@ export default function RegistrationsPage() {
                         </Link>
                       </td>
                       <td className="px-3 py-2.5 whitespace-nowrap text-stone-500">{formatDateTime(r.createdAt)}</td>
+                      <td className="px-3 py-2.5 whitespace-nowrap">
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                            r.type === 'competition' ? 'bg-sky-50 text-sky-700' : 'bg-gold-100 text-maroon-800'
+                          }`}
+                        >
+                          {registrationTypeLabel(r.type)}
+                        </span>
+                      </td>
                       <td className="px-3 py-2.5 font-medium">{r.fullName}</td>
+                      <td className="px-3 py-2.5">{r.gender ? genderLabel(r.gender) : '-'}</td>
                       <td className="px-3 py-2.5 font-mono text-xs">{r.mobileNumber}</td>
                       <td className="max-w-56 px-3 py-2.5 text-xs text-stone-600" title={r.address}>
                         <span className="line-clamp-2">{r.address}</span>

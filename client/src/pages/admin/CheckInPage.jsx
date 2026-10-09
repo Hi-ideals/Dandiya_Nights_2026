@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import { Ban, Camera, CameraOff, CheckCircle2, Info, Keyboard, ScanLine, XCircle } from 'lucide-react';
 import { adminApi, errorCode, errorMessage } from '../../services/api';
 import { ConfirmDialog, Spinner } from '../../components/ui';
-import { categoryLabel, competitionsLabel, formatDateTime } from '../../utils/format';
+import { TICKET_TYPE_LABELS, categoryLabel, competitionsLabel, formatDateTime, genderLabel } from '../../utils/format';
 
 const SCANNER_ID = 'qr-scanner';
 
@@ -45,15 +45,29 @@ function ResultCard({ result, onCheckIn, onNext, busy }) {
       </div>
 
       {t && (
+        <p
+          className={`mt-4 rounded-xl px-4 py-3 text-center text-lg font-bold ${
+            t.registrationType === 'competition' ? 'bg-sky-600 text-white' : 'bg-maroon-800 text-gold-200'
+          }`}
+        >
+          {TICKET_TYPE_LABELS[t.ticketType] ?? categoryLabel(t.category)}
+        </p>
+      )}
+
+      {t && (
         <dl className={`mt-4 grid grid-cols-2 gap-3 text-sm ${dark ? 'text-white' : 'text-stone-800'}`}>
           <div>
             <dt className={`text-xs ${dark ? 'text-white/70' : 'text-stone-500'}`}>Name</dt>
             <dd className="font-semibold">{t.holderName}</dd>
           </div>
           <div>
-            <dt className={`text-xs ${dark ? 'text-white/70' : 'text-stone-500'}`}>Entry</dt>
+            <dt className={`text-xs ${dark ? 'text-white/70' : 'text-stone-500'}`}>
+              {t.registrationType === 'competition' ? 'Gender' : 'Entry'}
+            </dt>
             <dd className="font-semibold">
-              {categoryLabel(t.category)} ({t.category === 'couple' ? 'admits 2' : 'admits 1'})
+              {t.registrationType === 'competition'
+                ? genderLabel(t.gender)
+                : `${categoryLabel(t.category)} (${t.category === 'couple' ? 'admits 2' : 'admits 1'})`}
             </dd>
           </div>
           <div>

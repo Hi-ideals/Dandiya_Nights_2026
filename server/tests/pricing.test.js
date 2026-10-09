@@ -48,6 +48,28 @@ describe('pricing', () => {
     expect(() => calculatePricing({ category: 'couple', ticketQuantity })).toThrow(/between 1 and 7/);
   });
 
+  it.each([
+    ['1 Rangoli ticket', { competition: 'rangoli', ticketQuantity: 1 }, 11000],
+    ['3 Drawing tickets', { competition: 'drawing', ticketQuantity: 3 }, 33000],
+    ['7 Rangoli tickets (max)', { competition: 'rangoli', ticketQuantity: 7 }, 77000],
+  ])('competition: %s', (_label, { competition, ticketQuantity }, expected) => {
+    const b = calculatePricing({
+      type: 'competition',
+      rangoliSelected: competition === 'rangoli',
+      drawingSelected: competition === 'drawing',
+      ticketQuantity,
+    });
+    expect(b).toMatchObject({ totalAmountPaise: expected, ticketSubtotalPaise: 0, ticketQuantity });
+    expect(b.competitions).toEqual([expect.objectContaining({ key: competition, quantity: ticketQuantity })]);
+  });
+
+  it('competition pricing needs exactly one competition', () => {
+    expect(() => calculatePricing({ type: 'competition', ticketQuantity: 1 })).toThrow(/Rangoli or Drawing/);
+    expect(() =>
+      calculatePricing({ type: 'competition', rangoliSelected: true, drawingSelected: true, ticketQuantity: 1 }),
+    ).toThrow(/Rangoli or Drawing/);
+  });
+
   it('rejects an unknown category', () => {
     expect(() => calculatePricing({ category: 'family', ticketQuantity: 1 })).toThrow();
   });

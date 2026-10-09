@@ -35,3 +35,14 @@ export function uuid() {
   if (crypto?.randomUUID) return crypto.randomUUID();
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
 }
+
+export const registrationTypeLabel = (type) => (type === 'competition' ? 'Rangoli / Drawing' : 'Dandiya Night');
+
+export const genderLabel = (gender) => (gender ? gender.charAt(0).toUpperCase() + gender.slice(1) : '-');
+
+export const TICKET_TYPE_LABELS = {
+  couple: 'Dandiya Night · Couple (admits 2)',
+  single: 'Dandiya Night · Single (admits 1)',
+  rangoli: 'Rangoli Competition',
+  drawing: 'Drawing Competition',
+};

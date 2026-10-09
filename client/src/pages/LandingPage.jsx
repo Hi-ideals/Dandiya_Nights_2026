@@ -34,10 +34,27 @@ const HIGHLIGHTS = [
   { icon: Gift, label: 'Gifts & More Surprises' },
 ];
 
+/** Dandiya Night tickets (Couple / Single). */
 function RegisterButton({ className = '' }) {
   return (
     <Link to="/register" className={`btn-primary px-7 py-3.5 text-base ${className}`}>
-      <Ticket className="h-5 w-5" /> Click Here for Registration
+      <Ticket className="h-5 w-5" /> Dandiya Night Registration
+    </Link>
+  );
+}
+
+/** Rangoli / Drawing competitions: a separate registration and payment. */
+function CompetitionRegisterButton({ className = '', dark = true }) {
+  return (
+    <Link
+      to="/register/competitions"
+      className={`btn px-7 py-3.5 text-base ${
+        dark
+          ? 'border-2 border-gold-400 bg-white/5 text-gold-200 hover:bg-gold-400 hover:text-maroon-950'
+          : 'border-2 border-maroon-600 bg-white text-maroon-800 hover:bg-maroon-50'
+      } ${className}`}
+    >
+      <Brush className="h-5 w-5" /> Register for Rangoli / Drawing
     </Link>
   );
 }
@@ -79,16 +96,19 @@ function Hero() {
             </li>
           </ul>
 
-          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
+          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center lg:justify-start">
             {event.registrationOpen ? (
-              <RegisterButton />
+              <>
+                <RegisterButton className="w-full sm:w-auto" />
+                <CompetitionRegisterButton className="w-full sm:w-auto" />
+              </>
             ) : (
               <span className="btn bg-white/10 text-white">Registrations are closed</span>
             )}
-            <a href="#pricing" className="btn text-gold-200 hover:text-gold-100">
-              View ticket prices <ChevronDown className="h-4 w-4" />
-            </a>
           </div>
+          <a href="#pricing" className="btn mt-2 text-gold-200 hover:text-gold-100">
+            View ticket prices <ChevronDown className="h-4 w-4" />
+          </a>
         </div>
 
         <div className="order-1 mx-auto w-full max-w-md lg:order-2">
@@ -178,10 +198,10 @@ function PriceCard({ icon: Icon, title, item, unit, highlight }) {
       <Icon className={`h-8 w-8 ${highlight ? 'text-gold-300' : 'text-maroon-600'}`} />
       <h3 className={`mt-3 text-lg font-semibold ${highlight ? 'text-gold-100' : 'text-stone-900'}`}>{title}</h3>
       <p className={`mt-3 font-display text-4xl ${highlight ? 'text-gold-300' : 'text-maroon-800'}`}>
-        {formatINR(item.basePaise + item.platformFeePaise)}
+        {formatINR(item.basePaise)}
       </p>
       <p className={`mt-1 text-xs ${highlight ? 'text-white/60' : 'text-stone-500'}`}>
-        {formatINR(item.basePaise)} + {formatINR(item.platformFeePaise)} platform fee · {unit}
+        + {formatINR(item.platformFeePaise)} platform fee · {unit}
       </p>
     </div>
   );
@@ -189,7 +209,6 @@ function PriceCard({ icon: Icon, title, item, unit, highlight }) {
 
 function Pricing() {
   const { pricing } = useConfig();
-  const perRegistration = pricing.competitionChargeMode === 'per_registration';
   return (
     <section id="pricing" className="scroll-mt-20 bg-white py-16">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
@@ -204,14 +223,18 @@ function Pricing() {
           <PriceCard icon={User} title="Single Entry" item={pricing.categories.single} unit="per ticket" />
           <PriceCard
             icon={Trophy}
-            title="Drawing / Rangoli"
+            title="Rangoli / Drawing"
             item={pricing.competitions.rangoli}
-            unit={perRegistration ? 'per competition, per booking' : 'per competition, per ticket'}
+            unit="per participant, per competition"
           />
         </div>
-        <div className="mt-10 text-center">
-          <RegisterButton />
+        <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <RegisterButton className="w-full sm:w-auto" />
+          <CompetitionRegisterButton className="w-full sm:w-auto" dark={false} />
         </div>
+        <p className="mt-3 text-center text-xs text-stone-500">
+          Dandiya Night tickets and Rangoli / Drawing entries are booked and paid separately.
+        </p>
       </div>
     </section>
   );
@@ -275,6 +298,11 @@ function Competitions() {
             <p className="text-xs text-white/60">+ {formatINR(pricing.competitions.rangoli.platformFeePaise)} platform fee each</p>
           </div>
         </div>
+        {event.registrationOpen && (
+          <div className="mt-10 text-center">
+            <CompetitionRegisterButton />
+          </div>
+        )}
       </div>
     </section>
   );
@@ -318,7 +346,7 @@ function Faq() {
     ],
     [
       'Do I need a Dandiya ticket to join the competitions?',
-      'Competitions are added to a booking during registration. You can choose Rangoli, Drawing, both, or neither. The competition fee is charged once per booking.',
+      'No. Rangoli and Drawing have their own registration - tap "Register for Rangoli / Drawing", choose Rangoli or Drawing, and pay separately. You get a ticket with a QR code. To join both competitions, register once for each. Dandiya Night tickets are booked separately with "Dandiya Night Registration".',
     ],
     [
       'When are the competitions and the Dandiya night?',
@@ -391,9 +419,12 @@ export default function LandingPage() {
       <Faq />
       <Contact />
       {event.registrationOpen && (
-        <div className="sticky bottom-0 z-30 border-t border-maroon-100 bg-white/95 p-3 backdrop-blur md:hidden">
-          <Link to="/register" className="btn-primary w-full py-3">
-            <Ticket className="h-5 w-5" /> Click Here for Registration
+        <div className="sticky bottom-0 z-30 grid grid-cols-2 gap-2 border-t border-maroon-100 bg-white/95 p-3 backdrop-blur md:hidden">
+          <Link to="/register" className="btn-primary px-3 py-3 text-sm">
+            <Ticket className="h-4 w-4" /> Dandiya Night
+          </Link>
+          <Link to="/register/competitions" className="btn border-2 border-maroon-600 bg-white px-3 py-3 text-sm text-maroon-800">
+            <Brush className="h-4 w-4" /> Rangoli / Drawing
           </Link>
         </div>
       )}

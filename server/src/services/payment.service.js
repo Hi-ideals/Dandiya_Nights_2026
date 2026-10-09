@@ -8,6 +8,8 @@ import {
   PAYMENT_STATUS,
   REGISTRATION_STATUS,
   TICKET_STATUS,
+  registrationType,
+  ticketTypesFor,
 } from '../config/constants.js';
 import { AppError } from '../utils/AppError.js';
 import {
@@ -24,6 +26,14 @@ const REUSABLE_ORDER_STATUSES = [ORDER_STATUS.created, ORDER_STATUS.failed, ORDE
 
 const col = (name) => getDb().collection(name);
 
+function checkoutDescription(reg) {
+  if (registrationType(reg) === 'competition') {
+    const names = [reg.rangoliSelected && 'Rangoli', reg.drawingSelected && 'Drawing'].filter(Boolean);
+    return `${names.join(' & ')} competition entry`;
+  }
+  return `${reg.ticketQuantity} x ${reg.category === 'couple' ? 'Couple' : 'Single'} Dandiya ticket(s)`;
+}
+
 function checkoutPayload(reg, orderId) {
   return {
     alreadyPaid: false,
@@ -33,7 +43,7 @@ function checkoutPayload(reg, orderId) {
     currency: reg.currency,
     registrationNumber: reg.registrationNumber,
     name: getEventConfig().name,
-    description: `${reg.ticketQuantity} x ${reg.category === 'couple' ? 'Couple' : 'Single'} ticket(s)`,
+    description: checkoutDescription(reg),
     prefill: { name: reg.fullName, contact: `+91${reg.mobileNumber}` },
   };
 }
@@ -171,9 +181,9 @@ export async function confirmPayment({ orderId, paymentId, amountPaise, currency
       throw new AppError(400, 'AMOUNT_MISMATCH', 'Payment amount does not match the booking');
     }
 
-    const ticketNumbers = Array.from({ length: reg.ticketQuantity }, (_, i) =>
-      buildTicketNumber(reg.registrationNumber, i + 1),
-    );
+    // Dandiya: one ticket per Couple/Single entry. Competition: one per selected competition.
+    const ticketTypes = ticketTypesFor(reg);
+    const ticketNumbers = ticketTypes.map((_, i) => buildTicketNumber(reg.registrationNumber, i + 1));
 
     tx.update(payRef, {
       status: ORDER_STATUS.paid,
@@ -194,12 +204,13 @@ export async function confirmPayment({ orderId, paymentId, amountPaise, currency
       updatedAt: serverTimestamp(),
     });
     // Deterministic ticket IDs inside the same transaction make duplicate tickets impossible.
-    ticketNumbers.forEach((ticketNumber) => {
+    ticketNumbers.forEach((ticketNumber, i) => {
       tx.set(col(COLLECTIONS.tickets).doc(ticketNumber), {
         registrationId: reg.registrationNumber,
         registrationNumber: reg.registrationNumber,
         ticketNumber,
-        category: reg.category,
+        category: reg.category ?? null,
+        ticketType: ticketTypes[i],
         qrToken: generateQrToken(),
         status: TICKET_STATUS.active,
         checkedIn: false,

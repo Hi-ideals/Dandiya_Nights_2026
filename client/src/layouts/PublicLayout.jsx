@@ -60,9 +60,9 @@ function Navbar() {
       <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6" aria-label="Main">
         <Link to="/" className="flex items-center gap-2">
           <DandiyaSticks className="h-8 w-8" />
-          <span className="font-display text-xl text-gold-300">{event.name}</span>
+          <span className="font-display text-xl whitespace-nowrap text-gold-300">{event.name}</span>
         </Link>
-        <div className="hidden items-center gap-1 md:flex">
+        <div className="hidden items-center gap-1 whitespace-nowrap xl:flex">
           {NAV.map((item) => (
             <a key={item.href} href={item.href} className="rounded-full px-3 py-2 text-sm text-white/80 hover:text-gold-200">
               {item.label}
@@ -72,13 +72,16 @@ function Navbar() {
             My Tickets
           </NavLink>
           <Link to="/register" className="btn-primary ml-2">
-            <Ticket className="h-4 w-4" /> Register
+            <Ticket className="h-4 w-4" /> Dandiya
+          </Link>
+          <Link to="/register/competitions" className="btn ml-1 border border-gold-400/60 px-4 text-gold-200 hover:bg-white/10">
+            Rangoli / Drawing
           </Link>
           <UserMenu />
         </div>
         <button
           type="button"
-          className="rounded-lg p-2 text-white md:hidden"
+          className="rounded-lg p-2 text-white xl:hidden"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
           aria-label="Toggle menu"
@@ -87,7 +90,7 @@ function Navbar() {
         </button>
       </nav>
       {open && (
-        <div className="border-t border-white/10 px-4 pb-4 md:hidden">
+        <div className="border-t border-white/10 px-4 pb-4 xl:hidden">
           {NAV.map((item) => (
             <a key={item.href} href={item.href} onClick={() => setOpen(false)} className="block py-2.5 text-white/90">
               {item.label}
@@ -97,7 +100,10 @@ function Navbar() {
             My Tickets
           </Link>
           <Link to="/register" className="btn-primary mt-2 w-full">
-            <Ticket className="h-4 w-4" /> Click Here for Registration
+            <Ticket className="h-4 w-4" /> Dandiya Night Registration
+          </Link>
+          <Link to="/register/competitions" className="btn mt-2 w-full border border-gold-400/60 text-gold-200">
+            Register for Rangoli / Drawing
           </Link>
           <div className="mt-3 border-t border-white/10 pt-3">
             <UserMenu mobile />
@@ -135,8 +141,19 @@ function Footer() {
           </a>
         </div>
       </div>
-      <div className="border-t border-white/10 py-4 text-center text-xs text-white/40">
-        © {new Date().getFullYear()} {event.organizer}. Payments secured by Razorpay.
+      <div className="space-y-1.5 border-t border-white/10 px-4 py-4 text-center text-xs text-white/40">
+        <p>© {new Date().getFullYear()} {event.organizer}. Payments secured by Razorpay.</p>
+        <p>
+          Design &amp; Developed By :{' '}
+          <a
+            href="https://hiideals.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-gold-300 underline-offset-2 hover:text-gold-200 hover:underline"
+          >
+            Hi-Ideals Technologies Pvt. Ltd.
+          </a>
+        </p>
       </div>
     </footer>
   );

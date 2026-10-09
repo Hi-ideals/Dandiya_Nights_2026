@@ -4,7 +4,7 @@ import { AlertCircle, ChevronRight, Ticket } from 'lucide-react';
 import { api, errorMessage } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
 import { EmptyState, PageLoader, StatusBadge } from '../components/ui';
-import { categoryLabel, competitionsLabel, formatDateTime, formatINR } from '../utils/format';
+import { categoryLabel, competitionsLabel, formatDateTime, formatINR, registrationTypeLabel } from '../utils/format';
 
 export default function MyBookingsPage() {
   const { user } = useAuth();
@@ -62,12 +62,15 @@ export default function MyBookingsPage() {
             >
               <div className="min-w-0">
                 <p className="font-mono font-semibold text-maroon-800">{b.registrationNumber}</p>
+                <p className="text-xs font-semibold tracking-wide text-gold-600 uppercase">{registrationTypeLabel(b.type)}</p>
                 <p className="truncate text-sm text-stone-700">
-                  {b.fullName} · {b.ticketQuantity} × {categoryLabel(b.category)} · {formatINR(b.totalAmountPaise)}
+                  {b.fullName} ·{' '}
+                  {b.type === 'competition'
+                    ? competitionsLabel(b)
+                    : `${b.ticketQuantity} × ${categoryLabel(b.category)}`}{' '}
+                  · {formatINR(b.totalAmountPaise)}
                 </p>
-                <p className="text-xs text-stone-500">
-                  Competitions: {competitionsLabel(b)} · Booked {formatDateTime(b.createdAt)}
-                </p>
+                <p className="text-xs text-stone-500">Booked {formatDateTime(b.createdAt)}</p>
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 <StatusBadge status={b.paymentStatus} />

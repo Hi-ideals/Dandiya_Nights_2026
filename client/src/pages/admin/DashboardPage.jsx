@@ -96,9 +96,20 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Stat icon={IndianRupee} label="Verified revenue" value={formatINR(s.verifiedRevenuePaise)} tone="green" sub="Successful payments only" />
-        <Stat icon={Users} label="Total registrations" value={s.totalRegistrations} />
+        <Stat
+          icon={IndianRupee}
+          label="Revenue: Dandiya / Competitions"
+          value={`${formatINR(s.dandiyaRevenuePaise ?? 0)} / ${formatINR(s.competitionRevenuePaise ?? 0)}`}
+          tone="green"
+        />
+        <Stat
+          icon={Users}
+          label="Total registrations"
+          value={s.totalRegistrations}
+          sub={`Dandiya ${s.dandiyaRegistrations ?? 0} · Rangoli/Drawing ${s.competitionRegistrations ?? 0}`}
+        />
         <Stat icon={BadgeCheck} label="Confirmed registrations" value={s.confirmedRegistrations} tone="green" />
-        <Stat icon={Ticket} label="Total tickets booked" value={s.totalTicketsBooked} tone="gold" sub="Confirmed bookings" />
+        <Stat icon={Ticket} label="Dandiya tickets booked" value={s.totalTicketsBooked} tone="gold" sub="Confirmed Couple + Single" />
         <Stat icon={Clock} label="Pending payments" value={s.pendingPayments} tone="amber" sub={s.cancelledPayments ? `+ ${s.cancelledPayments} cancelled` : undefined} />
         <Stat icon={XCircle} label="Failed payments" value={s.failedPayments} tone="red" />
         <Stat icon={Heart} label="Couple tickets" value={s.coupleTickets} />

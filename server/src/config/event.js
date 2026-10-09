@@ -13,6 +13,7 @@ const DEFAULT_SPONSORS = [
   'Trishul Brand',
   'Sudama Pohe',
   'Vintage Retreat Resort',
+  'Hi-Ideals Technologies Pvt. Ltd.',
 ].join(',');
 
 // All event details are configurable through environment variables.
@@ -30,8 +31,8 @@ export function getEventConfig() {
     venue: process.env.EVENT_VENUE || 'Jhira Function Hall, Bidar',
     venueMapUrl: process.env.EVENT_VENUE_MAP_URL || '',
     organizer: process.env.EVENT_ORGANIZER || 'Team Agni - Bidar Vibes KA38',
-    contactPhone: process.env.EVENT_CONTACT_PHONE || '+91 90000 00000',
-    contactEmail: process.env.EVENT_CONTACT_EMAIL || 'info@example.com',
+    contactPhone: process.env.EVENT_CONTACT_PHONE || '+91 63625 82268',
+    contactEmail: process.env.EVENT_CONTACT_EMAIL || 'arthotthana@gmail.com',
     competitionTheme: process.env.EVENT_COMPETITION_THEME || 'Devi Mata',
     // Per competition (Drawing and Rangoli each).
     prizes: {

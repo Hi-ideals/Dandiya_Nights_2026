@@ -32,11 +32,53 @@ describe('POST /api/registrations', () => {
     expect(ctx.db.all('tickets')).toHaveLength(0);
   });
 
-  it('creates a single registration with both competitions', async () => {
-    const { res } = await ctx.register({ category: 'single', ticketQuantity: 2, rangoliSelected: true, drawingSelected: true });
+  it('a Dandiya registration never includes competitions', async () => {
+    const { res, number } = await ctx.register({ category: 'single', ticketQuantity: 2, rangoliSelected: true, drawingSelected: true });
     expect(res.status).toBe(201);
-    expect(res.body.breakdown.totalAmountPaise).toBe(64000);
-    expect(res.body.breakdown.competitions.map((c) => c.key)).toEqual(['rangoli', 'drawing']);
+    expect(res.body.breakdown.totalAmountPaise).toBe(42000);
+    expect(ctx.db.get('registrations', number)).toMatchObject({ type: 'dandiya', rangoliSelected: false, drawingSelected: false });
+  });
+
+  it('creates a competition registration for exactly one competition (separate from Dandiya)', async () => {
+    const { res, number } = await ctx.register({ type: 'competition', gender: 'male', competition: 'drawing' });
+    expect(res.status).toBe(201);
+    expect(res.body.breakdown.totalAmountPaise).toBe(11000);
+    expect(res.body.breakdown.competitions.map((c) => c.key)).toEqual(['drawing']);
+    expect(ctx.db.get('registrations', number)).toMatchObject({
+      type: 'competition',
+      gender: 'male',
+      category: null,
+      ticketQuantity: 1,
+      rangoliSelected: false,
+      drawingSelected: true,
+      ticketSubtotalPaise: 0,
+      totalAmountPaise: 11000,
+    });
+  });
+
+  it('ignores attempts to add a second competition to the same registration', async () => {
+    const { res, number } = await ctx.register({
+      type: 'competition',
+      gender: 'female',
+      competition: 'rangoli',
+      drawingSelected: true,
+    });
+    expect(res.status).toBe(201);
+    expect(res.body.breakdown.totalAmountPaise).toBe(11000);
+    expect(ctx.db.get('registrations', number)).toMatchObject({ rangoliSelected: true, drawingSelected: false });
+  });
+
+  it('competition registration requires gender and one competition', async () => {
+    const { res } = await ctx.register({ type: 'competition' });
+    expect(res.status).toBe(400);
+    expect(res.body.error.fields).toMatchObject({
+      gender: 'Please select gender',
+      competition: 'Please select Rangoli or Drawing',
+    });
+    const bad = await ctx.register({ type: 'competition', gender: 'other', competition: 'rangoli' });
+    expect(bad.res.status).toBe(400);
+    const both = await ctx.register({ type: 'competition', gender: 'male', competition: 'both' });
+    expect(both.res.status).toBe(400);
   });
 
   it('accepts exactly 7 tickets', async () => {

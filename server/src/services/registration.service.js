@@ -3,7 +3,13 @@ import { getDb, serverTimestamp } from '../config/firebase.js';
 import { env } from '../config/env.js';
 import { getEventConfig } from '../config/event.js';
 import { getPricingConfig } from '../config/pricing.js';
-import { COLLECTIONS, PAYMENT_STATUS, REGISTRATION_STATUS } from '../config/constants.js';
+import {
+  COLLECTIONS,
+  PAYMENT_STATUS,
+  REGISTRATION_STATUS,
+  TICKET_TYPE_LABELS,
+  registrationType,
+} from '../config/constants.js';
 import { calculatePricing } from './pricing.service.js';
 import { AppError, notFound } from '../utils/AppError.js';
 import { generateRegistrationNumber, sha256 } from '../utils/crypto.js';
@@ -27,9 +33,11 @@ export async function createRegistration(input, user) {
   const db = getDb();
 
   const fields = {
+    type: input.type,
     fullName: input.fullName.replace(/\s+/g, ' '),
     mobileNumber: input.mobileNumber,
     address: input.address.replace(/\s+/g, ' '),
+    gender: input.gender ?? null,
     category: input.category,
     ticketQuantity: input.ticketQuantity,
     rangoliSelected: input.rangoliSelected,
@@ -78,7 +86,7 @@ export async function createRegistration(input, user) {
       pricingSnapshot: {
         version: pricing.version,
         competitionChargeMode: pricing.competitionChargeMode,
-        category: pricing.categories[input.category],
+        category: input.category ? pricing.categories[input.category] : null,
         competitions: breakdown.competitions,
       },
       status: REGISTRATION_STATUS.pendingPayment,
@@ -121,6 +129,7 @@ export async function getTicketsForRegistration(registrationNumber) {
 
 export function breakdownFromRegistration(reg) {
   return {
+    type: registrationType(reg),
     currency: reg.currency,
     category: reg.category,
     categoryLabel: reg.pricingSnapshot?.category?.label,
@@ -140,6 +149,7 @@ export function breakdownFromRegistration(reg) {
 export function toStatusView(reg) {
   return {
     registrationNumber: reg.registrationNumber,
+    type: registrationType(reg),
     status: reg.status,
     paymentStatus: reg.paymentStatus,
     category: reg.category,
@@ -162,6 +172,7 @@ export async function getOwnerBooking(registrationNumber) {
     ...toStatusView(reg),
     fullName: reg.fullName,
     email: reg.email ?? null,
+    gender: reg.gender ?? null,
     mobileNumber: reg.mobileNumber,
     address: reg.address,
     rangoliSelected: reg.rangoliSelected,
@@ -174,6 +185,8 @@ export async function getOwnerBooking(registrationNumber) {
     tickets: await Promise.all(
       tickets.map(async (ticket) => ({
         ticketNumber: ticket.ticketNumber,
+        ticketType: ticket.ticketType ?? ticket.category,
+        ticketLabel: TICKET_TYPE_LABELS[ticket.ticketType ?? ticket.category] ?? null,
         status: ticket.status,
         checkedIn: ticket.checkedIn,
         checkedInAt: toIso(ticket.checkedInAt),

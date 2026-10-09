@@ -1,7 +1,7 @@
 import QRCode from 'qrcode';
 import { getDb, serverTimestamp } from '../config/firebase.js';
 import { getEventConfig } from '../config/event.js';
-import { COLLECTIONS, PAYMENT_STATUS, TICKET_STATUS } from '../config/constants.js';
+import { COLLECTIONS, PAYMENT_STATUS, TICKET_STATUS, TICKET_TYPE_LABELS, registrationType } from '../config/constants.js';
 import { AppError } from '../utils/AppError.js';
 import { TICKET_NUMBER_RE } from '../utils/crypto.js';
 import { formatIstDateTime, toIso } from '../utils/format.js';
@@ -28,7 +28,11 @@ function describe(ticket, reg) {
     ticket: {
       ticketNumber: ticket.ticketNumber,
       registrationNumber: ticket.registrationNumber,
+      registrationType: registrationType(reg),
       category: ticket.category,
+      ticketType: ticket.ticketType ?? ticket.category,
+      ticketLabel: TICKET_TYPE_LABELS[ticket.ticketType ?? ticket.category] ?? null,
+      gender: reg.gender ?? null,
       status: ticket.status,
       checkedIn: ticket.checkedIn,
       checkedInAt: toIso(ticket.checkedInAt),

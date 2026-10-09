@@ -10,11 +10,6 @@ const trimmed = (min, max, label) =>
     .min(min, `${label} must be at least ${min} characters`)
     .max(max, `${label} must be at most ${max} characters`);
 
-const booleanish = z
-  .union([z.boolean(), z.enum(['true', 'false'])])
-  .optional()
-  .transform((value) => value === true || value === 'true');
-
 export const registrationNumberParam = z.object({
   registrationNumber: z
     .string()
@@ -23,7 +18,7 @@ export const registrationNumberParam = z.object({
     .regex(REGISTRATION_NUMBER_RE, 'Invalid registration number'),
 });
 
-export const createRegistrationSchema = z.object({
+const personFields = {
   fullName: trimmed(2, 100, 'Full name').regex(
     /^[\p{L}][\p{L}\p{M} .'-]*$/u,
     'Full name can contain letters, spaces, dots, hyphens and apostrophes only',
@@ -39,21 +34,56 @@ export const createRegistrationSchema = z.object({
       return normalized;
     }),
   address: trimmed(5, 300, 'Address'),
-  category: z.enum(['couple', 'single'], { error: 'Please choose Couple or Single' }),
-  ticketQuantity: z.coerce
-    .number({ error: 'Number of tickets is required' })
-    .int('Number of tickets must be a whole number')
-    .min(1, 'Book at least 1 ticket')
-    .refine((value) => value <= getPricingConfig().maxTicketsPerBooking, {
-      message: `You can book at most ${getPricingConfig().maxTicketsPerBooking} tickets per booking`,
-    }),
-  rangoliSelected: booleanish,
-  drawingSelected: booleanish,
   // Client-generated UUID that makes the submit button idempotent.
   clientRequestId: z
     .string({ error: 'clientRequestId is required' })
     .regex(/^[A-Za-z0-9_-]{8,64}$/, 'Invalid clientRequestId'),
+};
+
+const ticketQuantity = z.coerce
+  .number({ error: 'Number of tickets is required' })
+  .int('Number of tickets must be a whole number')
+  .min(1, 'Book at least 1 ticket')
+  .refine((value) => value <= getPricingConfig().maxTicketsPerBooking, {
+    message: `You can book at most ${getPricingConfig().maxTicketsPerBooking} tickets per booking`,
+  });
+
+/** Dandiya Night entry: Couple/Single tickets only (no competitions). */
+const dandiyaRegistration = z.object({
+  type: z.literal('dandiya'),
+  ...personFields,
+  category: z.enum(['couple', 'single'], { error: 'Please choose Couple or Single' }),
+  ticketQuantity,
 });
+
+/** Rangoli / Drawing entry: exactly one competition, one ticket (the participant). */
+const competitionRegistration = z.object({
+  type: z.literal('competition'),
+  ...personFields,
+  gender: z.enum(['male', 'female'], { error: 'Please select gender' }),
+  competition: z.enum(['rangoli', 'drawing'], { error: 'Please select Rangoli or Drawing' }),
+});
+
+export const createRegistrationSchema = z
+  .preprocess(
+    // Requests without a type are Dandiya registrations.
+    (value) => (value && typeof value === 'object' && !('type' in value) ? { ...value, type: 'dandiya' } : value),
+    z.discriminatedUnion('type', [dandiyaRegistration, competitionRegistration], {
+      error: 'Registration type must be "dandiya" or "competition"',
+    }),
+  )
+  .transform((v) =>
+    v.type === 'dandiya'
+      ? { ...v, gender: null, rangoliSelected: false, drawingSelected: false }
+      : {
+          ...v,
+          category: null,
+          // Always a single ticket; any quantity sent by the client is ignored.
+          ticketQuantity: 1,
+          rangoliSelected: v.competition === 'rangoli',
+          drawingSelected: v.competition === 'drawing',
+        },
+  );
 
 export const createOrderSchema = registrationNumberParam;
 
@@ -90,6 +120,7 @@ const isoDay = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use YYYY-MM-DD');
 
 export const adminRegistrationsQuery = z.object({
   q: z.string().trim().max(254).optional(),
+  type: z.enum(['dandiya', 'competition']).optional(),
   category: z.enum(['couple', 'single']).optional(),
   paymentStatus: z.enum(['pending', 'failed', 'cancelled', 'paid']).optional(),
   competition: z.enum(['rangoli', 'drawing', 'both', 'any', 'none']).optional(),

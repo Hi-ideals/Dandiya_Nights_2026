@@ -4,7 +4,7 @@ import { AlertTriangle, ArrowLeft } from 'lucide-react';
 import { adminApi, errorMessage } from '../../services/api';
 import PricingBreakdown from '../../components/PricingBreakdown';
 import { EmptyState, PageLoader, StatusBadge } from '../../components/ui';
-import { categoryLabel, competitionsLabel, formatDateTime, formatINR } from '../../utils/format';
+import { categoryLabel, competitionsLabel, formatDateTime, formatINR, genderLabel, registrationTypeLabel } from '../../utils/format';
 
 function Item({ label, children, mono }) {
   return (
@@ -59,12 +59,15 @@ export default function RegistrationDetailPage() {
         <section className="card p-5">
           <h2 className="font-semibold text-maroon-800">Participant</h2>
           <dl className="mt-4 grid gap-4 sm:grid-cols-2">
+            <Item label="Registration for">{registrationTypeLabel(reg.type)}</Item>
+            <Item label="Email">{reg.email}</Item>
             <Item label="Name">{reg.fullName}</Item>
+            {reg.type === 'competition' && <Item label="Gender">{genderLabel(reg.gender)}</Item>}
             <Item label="Mobile">+91 {reg.mobileNumber}</Item>
             <div className="sm:col-span-2">
               <Item label="Address">{reg.address}</Item>
             </div>
-            <Item label="Category">{categoryLabel(reg.category)}</Item>
+            {reg.type !== 'competition' && <Item label="Category">{categoryLabel(reg.category)}</Item>}
             <Item label="Tickets">{reg.ticketQuantity}</Item>
             <Item label="Competitions">{competitionsLabel(reg)}</Item>
             <Item label="Pricing version">{reg.pricingVersion}</Item>

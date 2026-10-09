@@ -102,8 +102,9 @@ describe('ticket verification and check-in', () => {
 
 describe('admin API', () => {
   async function seed() {
-    const a = await ctx.bookAndPay({ fullName: 'Anita Rao', category: 'couple', ticketQuantity: 2, rangoliSelected: true });
-    const b = await ctx.bookAndPay({ fullName: 'Rahul Patil', category: 'single', ticketQuantity: 3, drawingSelected: true, mobileNumber: '9123456780' });
+    const a = await ctx.bookAndPay({ fullName: 'Anita Rao', category: 'couple', ticketQuantity: 2 });
+    const b = await ctx.bookAndPay({ fullName: 'Rahul Patil', category: 'single', ticketQuantity: 3, mobileNumber: '9123456780' });
+    const e = await ctx.bookAndPay({ fullName: 'Sneha Kulkarni', type: 'competition', gender: 'female', competition: 'rangoli' });
     const c = await ctx.register({ fullName: 'Pending Person', category: 'single', ticketQuantity: 1 });
     const d = await ctx.register({ fullName: 'Failed Payer', address: '=HYPERLINK("http://evil")', category: 'couple', ticketQuantity: 1 });
     const order = await ctx.createOrder(d.number, d.token);
@@ -112,7 +113,7 @@ describe('admin API', () => {
       .set(bearer(d.token))
       .send({ registrationNumber: d.number, razorpay_order_id: order.body.orderId });
     await ctx.api.post(`/api/tickets/${a.number}-01/check-in`).set(bearer('staff-token'));
-    return { a, b, c, d };
+    return { a, b, c, d, e };
   }
 
   it('rejects unauthenticated, non-admin and staff users', async () => {
@@ -121,50 +122,63 @@ describe('admin API', () => {
     expect((await ctx.api.get('/api/admin/export/excel').set(bearer('staff-token'))).status).toBe(403);
   });
 
-  it('dashboard counts only verified payments as revenue', async () => {
+  it('dashboard counts only verified payments and separates Dandiya from competitions', async () => {
     await seed();
     const res = await ctx.api.get('/api/admin/dashboard').set(bearer('admin-token'));
     expect(res.status).toBe(200);
     expect(res.body.summary).toMatchObject({
-      totalRegistrations: 4,
-      confirmedRegistrations: 2,
+      totalRegistrations: 5,
+      dandiyaRegistrations: 4,
+      competitionRegistrations: 1,
+      confirmedRegistrations: 3,
       pendingPayments: 1,
       failedPayments: 1,
       totalTicketsBooked: 5,
       coupleTickets: 2,
       singleTickets: 3,
       rangoliParticipants: 1,
-      drawingParticipants: 1,
-      verifiedRevenuePaise: 2 * 52000 + 11000 + 3 * 21000 + 11000,
+      drawingParticipants: 0,
+      verifiedRevenuePaise: 2 * 52000 + 3 * 21000 + 11000,
+      dandiyaRevenuePaise: 2 * 52000 + 3 * 21000,
+      competitionRevenuePaise: 11000,
       ticketsCheckedIn: 1,
-      ticketsRemaining: 4,
+      ticketsRemaining: 5,
     });
   });
 
   it('lists, searches, filters and paginates registrations', async () => {
-    const { a, b } = await seed();
+    const { a, b, e } = await seed();
     const get = (query) => ctx.api.get('/api/admin/registrations').query(query).set(bearer('admin-token'));
 
     const all = await get({ pageSize: 2 });
-    expect(all.body.pagination).toEqual({ page: 1, pageSize: 2, total: 4, totalPages: 2 });
+    expect(all.body.pagination).toEqual({ page: 1, pageSize: 2, total: 5, totalPages: 3 });
 
     expect((await get({ q: 'anita' })).body.items.map((r) => r.registrationNumber)).toEqual([a.number]);
     expect((await get({ q: '91234' })).body.items[0].registrationNumber).toBe(b.number);
     expect((await get({ q: `${b.number}-02` })).body.items[0].registrationNumber).toBe(b.number);
-    expect((await get({ paymentStatus: 'paid' })).body.pagination.total).toBe(2);
+    expect((await get({ paymentStatus: 'paid' })).body.pagination.total).toBe(3);
     expect((await get({ category: 'single' })).body.pagination.total).toBe(2);
-    expect((await get({ competition: 'rangoli' })).body.items[0].registrationNumber).toBe(a.number);
-    expect((await get({ competition: 'none' })).body.pagination.total).toBe(2);
+    expect((await get({ type: 'competition' })).body.items.map((r) => r.registrationNumber)).toEqual([e.number]);
+    expect((await get({ type: 'dandiya' })).body.pagination.total).toBe(4);
+    expect((await get({ competition: 'rangoli' })).body.items[0].registrationNumber).toBe(e.number);
+    expect((await get({ competition: 'none' })).body.pagination.total).toBe(4);
     expect((await get({ checkIn: 'partial' })).body.items[0].registrationNumber).toBe(a.number);
 
     const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
-    expect((await get({ from: today, to: today })).body.pagination.total).toBe(4);
+    expect((await get({ from: today, to: today })).body.pagination.total).toBe(5);
     expect((await get({ from: '2020-01-01', to: '2020-01-02' })).body.pagination.total).toBe(0);
 
     const row = (await get({ q: a.number })).body.items[0];
-    expect(row).toMatchObject({ ticketNumbers: [`${a.number}-01`, `${a.number}-02`], checkIn: { checkedIn: 1, total: 2, state: 'partial' } });
+    expect(row).toMatchObject({
+      type: 'dandiya',
+      ticketNumbers: [`${a.number}-01`, `${a.number}-02`],
+      checkIn: { checkedIn: 1, total: 2, state: 'partial' },
+    });
     expect(row.razorpayOrderId).toMatch(/^order_/);
     expect(row.razorpayPaymentId).toMatch(/^pay_/);
+
+    const compRow = (await get({ q: e.number })).body.items[0];
+    expect(compRow).toMatchObject({ type: 'competition', gender: 'female', category: null, rangoliSelected: true });
   });
 
   it('returns registration details with tickets and payments', async () => {
@@ -172,8 +186,9 @@ describe('admin API', () => {
     const res = await ctx.api.get(`/api/admin/registrations/${a.number}`).set(bearer('admin-token'));
     expect(res.status).toBe(200);
     expect(res.body.tickets).toHaveLength(2);
+    expect(res.body.tickets[0].ticketType).toBe('couple');
     expect(res.body.payments[0]).toMatchObject({ status: 'paid', verifiedVia: 'checkout' });
-    expect(res.body.breakdown.totalAmountPaise).toBe(115000);
+    expect(res.body.breakdown.totalAmountPaise).toBe(104000);
   });
 
   it('exports an Excel workbook with three sheets, filters and formula escaping', async () => {
@@ -190,14 +205,18 @@ describe('admin API', () => {
     await wb.xlsx.load(res.body);
     expect(wb.worksheets.map((s) => s.name)).toEqual(['Registrations', 'Payments', 'Summary']);
     const regs = wb.getWorksheet('Registrations');
-    expect(regs.rowCount).toBe(5);
-    const addresses = regs.getColumn(5).values.slice(2);
-    expect(addresses).toContain(`'=HYPERLINK("http://evil")`);
+    expect(regs.rowCount).toBe(6);
+    const header = regs.getRow(1).values;
+    const colOf = (name) => header.indexOf(name);
+    expect(regs.getColumn(colOf('Address')).values.slice(2)).toContain(`'=HYPERLINK("http://evil")`);
+    expect(regs.getColumn(colOf('Registration Type')).values.slice(2)).toContain('Rangoli/Drawing');
+    expect(regs.getColumn(colOf('Gender')).values.slice(2)).toContain('Female');
 
     const summary = wb.getWorksheet('Summary');
     const metrics = Object.fromEntries(summary.getSheetValues().slice(2).filter(Boolean).map((r) => [r[1], r[2]]));
-    expect(metrics['Total registrations']).toBe(4);
-    expect(metrics['Verified revenue']).toBe(1890);
+    expect(metrics['Total registrations']).toBe(5);
+    expect(metrics['Verified revenue (total)']).toBe(1780);
+    expect(metrics['Verified revenue - Rangoli/Drawing']).toBe(110);
 
     const paidOnly = await ctx.api
       .get('/api/admin/export/excel')
@@ -207,7 +226,62 @@ describe('admin API', () => {
       .parse(binaryParser);
     const wb2 = new ExcelJS.Workbook();
     await wb2.xlsx.load(paidOnly.body);
-    expect(wb2.getWorksheet('Registrations').rowCount).toBe(3);
+    expect(wb2.getWorksheet('Registrations').rowCount).toBe(4);
     expect(paidOnly.headers['content-disposition']).toMatch(/-paid-/);
+  });
+});
+
+describe('competition registrations (Rangoli / Drawing)', () => {
+  it('issues one ticket for the chosen competition with its own label', async () => {
+    const { number, verify } = await ctx.bookAndPay({ fullName: 'Sneha Kulkarni', type: 'competition', gender: 'female', competition: 'rangoli' });
+    expect(verify.status).toBe(200);
+    expect(verify.body.booking).toMatchObject({ type: 'competition', gender: 'female', ticketQuantity: 1, amountPaidPaise: 11000 });
+    expect(verify.body.booking.tickets.map((t) => [t.ticketNumber, t.ticketType])).toEqual([[`${number}-01`, 'rangoli']]);
+    expect(verify.body.booking.tickets[0].ticketLabel).toMatch(/Rangoli Competition/);
+  });
+
+  it('always books exactly one competition ticket, whatever quantity is sent', async () => {
+    const { number, verify } = await ctx.bookAndPay({ type: 'competition', gender: 'male', competition: 'drawing', ticketQuantity: 5 });
+    expect(verify.body.booking).toMatchObject({ type: 'competition', ticketQuantity: 1, amountPaidPaise: 11000 });
+    expect(verify.body.booking.tickets.map((t) => [t.ticketNumber, t.ticketType])).toEqual([[`${number}-01`, 'drawing']]);
+    const dash = await ctx.api.get('/api/admin/dashboard').set(bearer('admin-token'));
+    expect(dash.body.summary).toMatchObject({ drawingParticipants: 1, rangoliParticipants: 0, competitionRevenuePaise: 11000 });
+  });
+
+  it('a participant can register for both competitions as two separate bookings', async () => {
+    const rangoli = await ctx.bookAndPay({ type: 'competition', gender: 'female', competition: 'rangoli' });
+    const drawing = await ctx.bookAndPay({ type: 'competition', gender: 'female', competition: 'drawing' });
+    expect(rangoli.number).not.toBe(drawing.number);
+    expect(rangoli.orderId).not.toBe(drawing.orderId);
+    expect(ctx.db.get('tickets', `${drawing.number}-01`).ticketType).toBe('drawing');
+  });
+
+  it('check-in shows staff which competition the ticket is for', async () => {
+    const { number } = await ctx.bookAndPay({ type: 'competition', gender: 'female', competition: 'drawing' });
+    const res = await ctx.api.get(`/api/tickets/verify/${number}-01`).set(bearer('staff-token'));
+    expect(res.body).toMatchObject({
+      result: 'valid',
+      ticket: { registrationType: 'competition', ticketType: 'drawing', gender: 'female' },
+    });
+    expect(res.body.ticket.ticketLabel).toMatch(/Drawing Competition/);
+  });
+
+  it('downloads a competition ticket PDF', async () => {
+    const { number, token } = await ctx.bookAndPay({ type: 'competition', gender: 'female', competition: 'rangoli' });
+    const res = await ctx.api
+      .get(`/api/registrations/${number}/tickets/download`)
+      .set(bearer(token))
+      .buffer(true)
+      .parse(binaryParser);
+    expect(res.status).toBe(200);
+    expect(res.body.toString('latin1').match(/\/Type \/Page\b/g)).toHaveLength(1);
+  });
+
+  it('Dandiya and competition bookings by the same user are separate payments', async () => {
+    const dandiya = await ctx.bookAndPay({ category: 'single', ticketQuantity: 1 });
+    const comp = await ctx.bookAndPay({ type: 'competition', gender: 'female', competition: 'rangoli' });
+    expect(dandiya.orderId).not.toBe(comp.orderId);
+    const mine = await ctx.api.get('/api/me/bookings').set(bearer('user-token'));
+    expect(mine.body.items.map((b) => b.type).sort()).toEqual(['competition', 'dandiya']);
   });
 });

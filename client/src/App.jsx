@@ -32,7 +32,11 @@ export default function App() {
           <Route index element={<LandingPage />} />
           <Route path="login" element={<SignInPage />} />
           {/* Attendee pages require Google sign-in; bookings belong to the signed-in account. */}
-          <Route path="register" element={<RequireUser><RegisterPage /></RequireUser>} />
+          <Route path="register" element={<RequireUser><RegisterPage key="dandiya" type="dandiya" /></RequireUser>} />
+          <Route
+            path="register/competitions"
+            element={<RequireUser><RegisterPage key="competition" type="competition" /></RequireUser>}
+          />
           <Route path="payment/:registrationNumber/processing" element={<RequireUser><PaymentProcessingPage /></RequireUser>} />
           <Route path="payment/:registrationNumber/failed" element={<RequireUser><PaymentFailedPage /></RequireUser>} />
           <Route path="booking/:registrationNumber" element={<RequireUser><BookingPage /></RequireUser>} />

@@ -13,23 +13,33 @@ function Row({ label, detail, amount, muted }) {
 }
 
 /** Shared by the registration form (live estimate) and the booking page (charged snapshot). */
-export default function PricingBreakdown({ breakdown, title = 'Price breakdown', totalLabel = 'Total payable', note, className = '' }) {
+export default function PricingBreakdown({
+  breakdown,
+  title = 'Price breakdown',
+  totalLabel = 'Total payable',
+  note,
+  emptyHint = 'Choose a category and number of tickets to see the total.',
+  className = '',
+}) {
   if (!breakdown) {
     return (
       <div className={`card p-5 ${className}`}>
         <h3 className="font-semibold text-maroon-800">{title}</h3>
-        <p className="mt-2 text-sm text-stone-500">Choose a category and number of tickets to see the total.</p>
+        <p className="mt-2 text-sm text-stone-500">{emptyHint}</p>
       </div>
     );
   }
 
   const b = breakdown;
+  // Competition bookings have no Couple/Single entry tickets.
+  const hasEntryTickets = b.type !== 'competition' && b.ticketSubtotalPaise > 0;
   return (
     <div className={`card overflow-hidden ${className}`} aria-live="polite">
       <div className="border-b border-maroon-100 bg-maroon-50/60 px-5 py-3">
         <h3 className="font-semibold text-maroon-800">{title}</h3>
       </div>
       <div className="divide-y divide-dashed divide-stone-200 px-5 py-2">
+        {hasEntryTickets && (
         <div className="py-1">
           <Row
             label={`${b.categoryLabel ?? b.category} ticket × ${b.ticketQuantity}`}
@@ -43,6 +53,7 @@ export default function PricingBreakdown({ breakdown, title = 'Price breakdown',
             muted
           />
         </div>
+        )}
         {b.competitions?.length > 0 && (
           <div className="py-1">
             {b.competitions.map((c) => (

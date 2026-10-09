@@ -96,7 +96,9 @@ export default function PaymentFailedPage() {
             <div>
               <dt className="text-xs text-stone-500">Tickets</dt>
               <dd className="font-semibold capitalize">
-                {status.ticketQuantity} × {status.category}
+                {status.type === 'competition'
+                  ? `${status.ticketQuantity} competition entr${status.ticketQuantity > 1 ? 'ies' : 'y'}`
+                  : `${status.ticketQuantity} × ${status.category}`}
               </dd>
             </div>
             <div>
