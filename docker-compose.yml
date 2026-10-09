@@ -43,7 +43,7 @@ services:
       api:
         condition: service_healthy
     environment:
-      DOMAIN: ${DOMAIN}
+      SITE_ADDRESS: ${DOMAIN}
       ACME_EMAIL: ${ACME_EMAIL:?Set ACME_EMAIL in the root .env file}
     ports:
       - "80:80"

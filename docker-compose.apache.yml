@@ -1,0 +1,19 @@
+# Use when Apache (or another web server) already owns ports 80/443 on the host.
+# Apache terminates HTTPS and proxies the domain to 127.0.0.1:8080 (see deploy/apache-dandiya.conf).
+#
+#   docker compose -f docker-compose.yml -f docker-compose.apache.yml up -d --build
+#
+# (Set COMPOSE_FILE in the root .env to make this the default.)
+services:
+  api:
+    environment:
+      # Two proxies in front of the API: Apache -> Caddy -> API.
+      TRUST_PROXY: "2"
+
+  web:
+    environment:
+      # Plain HTTP inside; Apache handles the certificate.
+      SITE_ADDRESS: ":80"
+    ports: !override
+      # Only reachable from this machine (Apache), never directly from the internet.
+      - "127.0.0.1:8080:80"
