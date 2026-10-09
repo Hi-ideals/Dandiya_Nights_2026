@@ -1,0 +1,8 @@
+node_modules/
+dist/
+# Local development settings must not leak into the production build;
+# .env.production is intentionally included.
+.env
+.env.local
+.env.development
+*.log

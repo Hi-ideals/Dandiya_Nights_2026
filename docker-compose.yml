@@ -1,0 +1,63 @@
+# Dandiya Nights: production deployment on a single server.
+#
+#   1. cp .env.example .env              (set DOMAIN and ACME_EMAIL)
+#   2. server/.env, server/secrets/service-account.json, client/.env.production in place
+#   3. docker compose up -d --build
+#
+# Only the "web" container is exposed (ports 80/443). The API is reachable solely
+# through it on the internal Docker network.
+name: dandiya-nights
+
+services:
+  api:
+    build: ./server
+    image: dandiya-nights-api
+    restart: unless-stopped
+    env_file: ./server/.env
+    environment:
+      # These override server/.env so the container always runs correctly.
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: "5000"
+      TRUST_PROXY: "1"
+      CLIENT_URL: https://${DOMAIN:?Set DOMAIN in the root .env file}
+      PUBLIC_APP_URL: https://${DOMAIN}
+      GOOGLE_APPLICATION_CREDENTIALS: /app/secrets/service-account.json
+    volumes:
+      # chown 1000:1000 + chmod 600 the key on the host (container runs as uid 1000).
+      - ./server/secrets:/app/secrets:ro
+    expose:
+      - "5000"
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "5"
+
+  web:
+    build: ./client
+    image: dandiya-nights-web
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      DOMAIN: ${DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL:?Set ACME_EMAIL in the root .env file}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      # HTTPS certificates persist here across restarts/rebuilds.
+      - caddy_data:/data
+      - caddy_config:/config
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "5"
+
+volumes:
+  caddy_data:
+  caddy_config:

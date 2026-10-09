@@ -1,0 +1,12 @@
+# Never bake secrets into the image: .env is passed with env_file, the
+# service account is mounted read-only at runtime (see docker-compose.yml).
+.env
+.env.*
+secrets/
+node_modules/
+tests/
+coverage/
+vitest.config.js
+*.log
+# Only the optimised poster.jpg is needed for PDF tickets.
+assets/*.png

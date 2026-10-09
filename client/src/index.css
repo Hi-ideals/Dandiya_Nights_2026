@@ -1,0 +1,113 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Poppins', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Yatra One', 'Poppins', ui-serif, serif;
+
+  --color-maroon-50: #fdf2f5;
+  --color-maroon-100: #fbe4ea;
+  --color-maroon-200: #f5c2d0;
+  --color-maroon-500: #b3264f;
+  --color-maroon-600: #9a1a42;
+  --color-maroon-700: #7a1035;
+  --color-maroon-800: #5e0c29;
+  --color-maroon-900: #4a0a1f;
+  --color-maroon-950: #2a0512;
+
+  --color-gold-100: #fff4cc;
+  --color-gold-200: #fde68a;
+  --color-gold-300: #fcd34d;
+  --color-gold-400: #fbbf24;
+  --color-gold-500: #f59e0b;
+  --color-gold-600: #d97706;
+
+  --color-cream: #fdf6e9;
+
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-twinkle: twinkle 3s ease-in-out infinite;
+  --animate-fade-up: fade-up 0.6s ease-out both;
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0) rotate(-1deg);
+    }
+    50% {
+      transform: translateY(-10px) rotate(1deg);
+    }
+  }
+  @keyframes twinkle {
+    0%,
+    100% {
+      opacity: 0.35;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-cream font-sans text-stone-800 antialiased;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-gold-500;
+  }
+}
+
+@utility btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60;
+  }
+@utility btn-primary {
+    @apply btn bg-linear-to-r from-gold-400 to-gold-500 text-maroon-950 shadow-lg shadow-gold-500/25 hover:from-gold-300 hover:to-gold-400;
+  }
+@utility btn-maroon {
+    @apply btn bg-maroon-700 text-white hover:bg-maroon-800;
+  }
+@utility btn-outline {
+    @apply btn border border-maroon-200 bg-white text-maroon-800 hover:bg-maroon-50;
+  }
+@utility btn-ghost {
+    @apply btn text-maroon-800 hover:bg-maroon-50;
+  }
+@utility card {
+    @apply rounded-2xl border border-maroon-100 bg-white shadow-sm;
+  }
+@utility input {
+    @apply w-full rounded-xl border border-stone-300 bg-white px-3.5 py-2.5 text-sm text-stone-900 shadow-sm transition placeholder:text-stone-400 focus:border-gold-500 focus:outline-none focus:ring-2 focus:ring-gold-200;
+  }
+@utility input-error {
+    @apply border-red-400 focus:border-red-500 focus:ring-red-200;
+  }
+@utility label {
+    @apply mb-1.5 block text-sm font-medium text-stone-700;
+  }
+@utility section-title {
+    @apply font-display text-3xl text-maroon-800 sm:text-4xl;
+  }
+/* Festive mandala dot pattern used on dark sections */
+@utility festive-bg {
+    background-color: var(--color-maroon-950);
+    background-image:
+      radial-gradient(circle at 20% 10%, rgb(245 158 11 / 0.18), transparent 40%),
+      radial-gradient(circle at 85% 30%, rgb(219 39 119 / 0.18), transparent 45%),
+      radial-gradient(rgb(253 230 138 / 0.08) 1px, transparent 1px);
+    background-size:
+      auto,
+      auto,
+      22px 22px;
+  }

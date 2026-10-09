@@ -1,0 +1,12 @@
+rules_version = '2';
+
+// All application data is read and written exclusively by the Express backend through
+// the Firebase Admin SDK (which bypasses these rules and enforces its own authorization).
+// Browsers use Firebase only for Authentication, so direct Firestore access is denied.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
