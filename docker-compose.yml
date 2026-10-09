@@ -25,7 +25,8 @@ services:
       GOOGLE_APPLICATION_CREDENTIALS: /app/secrets/service-account.json
     volumes:
       # chown 1000:1000 + chmod 600 the key on the host (container runs as uid 1000).
-      - ./server/secrets:/app/secrets:ro
+      # ",z" relabels the folder for SELinux hosts (CentOS/Rocky/Alma); harmless elsewhere.
+      - ./server/secrets:/app/secrets:ro,z
     expose:
       - "5000"
     logging:
