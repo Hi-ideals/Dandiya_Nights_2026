@@ -141,7 +141,7 @@ automatic HTTPS). Files: `docker-compose.yml`, `server/Dockerfile`, `client/Dock
 
 ```bash
 # On the server, inside the cloned repo
-cp .env.example .env                       # DOMAIN=dandiyaevent.arthotthanaparishat.in, ACME_EMAIL=...
+cp .env.example .env                       # DOMAIN=dandiyanight.arthotthanaparishat.in, ACME_EMAIL=...
 # copy (scp) server/.env, server/secrets/service-account.json, client/.env.production (VITE_API_BASE_URL=/api)
 chown 1000:1000 server/secrets/service-account.json && chmod 600 server/secrets/service-account.json
 docker compose up -d --build
