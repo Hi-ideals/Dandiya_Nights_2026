@@ -187,7 +187,9 @@ export default function RegisterPage({ type = 'dandiya' }) {
   const err = (f) => (touched[f] || errors[f] ? errors[f] : undefined);
   const inputClass = (f) => `input ${err(f) ? 'input-error' : ''}`;
   const aria = (f) => ({ 'aria-invalid': Boolean(err(f)), 'aria-describedby': err(f) ? `${f}-error` : undefined });
-  const priceOf = (item) => formatINR(item.basePaise + item.platformFeePaise);
+  // Display only: base price, with the platform fee shown separately (the total is unchanged).
+  const priceOf = (item) => formatINR(item.basePaise);
+  const feeNote = (item) => `+ ${formatINR(item.platformFeePaise)} platform fee`;
 
   const quantityField = (
     <Field
@@ -364,8 +366,8 @@ export default function RegisterPage({ type = 'dandiya' }) {
                       }}
                       icon={Icon}
                       title={title}
-                      price={priceOf(pricing.competitions[value])}
-                      note={note}
+                      price={`${priceOf(pricing.competitions[value])} per participant`}
+                      note={`${feeNote(pricing.competitions[value])} · ${note}`}
                     />
                   ))}
                 </div>
@@ -402,7 +404,7 @@ export default function RegisterPage({ type = 'dandiya' }) {
                         icon={Icon}
                         title={title}
                         price={`${priceOf(pricing.categories[value])} per ticket`}
-                        note={note}
+                        note={`${feeNote(pricing.categories[value])} · ${note}`}
                       />
                     ))}
                   </div>
