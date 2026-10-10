@@ -391,7 +391,7 @@ export default function RegisterPage({ type = 'dandiya' }) {
                   <div className="grid gap-3 sm:grid-cols-2" id="category" tabIndex={-1}>
                     {[
                       ['couple', Heart, 'Couple', 'Admits two people'],
-                      ['single', User, 'Single', 'Admits one person'],
+                      ['single', User, 'Single (Female Only)', 'Admits one person'],
                     ].map(([value, Icon, title, note]) => (
                       <ChoiceCard
                         key={value}
