@@ -144,14 +144,14 @@ function Footer() {
       <div className="space-y-1.5 border-t border-white/10 px-4 py-4 text-center text-xs text-white/40">
         <p>© {new Date().getFullYear()} {event.organizer}. Payments secured by Razorpay.</p>
         <p>
-          Design &amp; Developed By :{' '}
+          Powered By :{' '}
           <a
-            href="https://hiideals.com/"
+            href="https://arthotthanaparishat.in/"
             target="_blank"
             rel="noopener noreferrer"
             className="font-semibold text-gold-300 underline-offset-2 hover:text-gold-200 hover:underline"
           >
-            Hi-Ideals Technologies Pvt. Ltd.
+            Arthotthanaparishat
           </a>
         </p>
       </div>

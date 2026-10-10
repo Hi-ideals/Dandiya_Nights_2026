@@ -31,13 +31,13 @@ export const DEFAULT_CONFIG = {
     registrationOpen: true,
   },
   pricing: {
-    version: '2026-v1',
+    version: '2026-v2',
     currency: 'INR',
     maxTicketsPerBooking: 7,
     competitionChargeMode: 'per_registration',
     categories: {
-      couple: { label: 'Couple', basePaise: 49900, platformFeePaise: 2100 },
-      single: { label: 'Single', basePaise: 19900, platformFeePaise: 1100 },
+      couple: { label: 'Couple', basePaise: 49900, platformFeePaise: 3100 },
+      single: { label: 'Single', basePaise: 19900, platformFeePaise: 2100 },
     },
     competitions: {
       rangoli: { label: 'Rangoli Competition', basePaise: 9900, platformFeePaise: 1100 },

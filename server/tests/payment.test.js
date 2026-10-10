@@ -27,9 +27,9 @@ describe('create-order', () => {
     const { number, token } = await ctx.register({ category: 'couple', ticketQuantity: 1 });
     const res = await ctx.createOrder(number, token);
     expect(res.status).toBe(200);
-    expect(res.body).toMatchObject({ amountPaise: 52000, currency: 'INR', keyId: 'rzp_test_dummy' });
+    expect(res.body).toMatchObject({ amountPaise: 53000, currency: 'INR', keyId: 'rzp_test_dummy' });
     expect(res.body.description).toMatch(/Couple Dandiya/);
-    expect(ctx.razorpay.orders.get(res.body.orderId).amount).toBe(52000);
+    expect(ctx.razorpay.orders.get(res.body.orderId).amount).toBe(53000);
     expect(ctx.db.get('payments', res.body.orderId)).toMatchObject({ registrationId: number, status: 'created' });
   });
 
@@ -78,7 +78,7 @@ describe('verify payment', () => {
     expect(verify.body.booking.tickets[0].qrDataUrl).toMatch(/^data:image\/png;base64,/);
 
     const reg = ctx.db.get('registrations', number);
-    expect(reg).toMatchObject({ status: 'confirmed', paymentStatus: 'paid', razorpayPaymentId: payment.id, amountPaidPaise: 63000 });
+    expect(reg).toMatchObject({ status: 'confirmed', paymentStatus: 'paid', razorpayPaymentId: payment.id, amountPaidPaise: 66000 });
     const tickets = ctx.db.all('tickets');
     expect(tickets).toHaveLength(3);
     expect(new Set(tickets.map((t) => t.qrToken)).size).toBe(3);

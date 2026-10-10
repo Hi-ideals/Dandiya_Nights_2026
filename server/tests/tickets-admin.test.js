@@ -138,8 +138,8 @@ describe('admin API', () => {
       singleTickets: 3,
       rangoliParticipants: 1,
       drawingParticipants: 0,
-      verifiedRevenuePaise: 2 * 52000 + 3 * 21000 + 11000,
-      dandiyaRevenuePaise: 2 * 52000 + 3 * 21000,
+      verifiedRevenuePaise: 2 * 53000 + 3 * 22000 + 11000,
+      dandiyaRevenuePaise: 2 * 53000 + 3 * 22000,
       competitionRevenuePaise: 11000,
       ticketsCheckedIn: 1,
       ticketsRemaining: 5,
@@ -188,7 +188,7 @@ describe('admin API', () => {
     expect(res.body.tickets).toHaveLength(2);
     expect(res.body.tickets[0].ticketType).toBe('couple');
     expect(res.body.payments[0]).toMatchObject({ status: 'paid', verifiedVia: 'checkout' });
-    expect(res.body.breakdown.totalAmountPaise).toBe(104000);
+    expect(res.body.breakdown.totalAmountPaise).toBe(106000);
   });
 
   it('exports an Excel workbook with three sheets, filters and formula escaping', async () => {
@@ -215,7 +215,7 @@ describe('admin API', () => {
     const summary = wb.getWorksheet('Summary');
     const metrics = Object.fromEntries(summary.getSheetValues().slice(2).filter(Boolean).map((r) => [r[1], r[2]]));
     expect(metrics['Total registrations']).toBe(5);
-    expect(metrics['Verified revenue (total)']).toBe(1780);
+    expect(metrics['Verified revenue (total)']).toBe(1830);
     expect(metrics['Verified revenue - Rangoli/Drawing']).toBe(110);
 
     const paidOnly = await ctx.api

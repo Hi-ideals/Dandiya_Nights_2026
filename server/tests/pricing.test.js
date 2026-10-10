@@ -8,14 +8,14 @@ const total = (input) => calculatePricing({ rangoliSelected: false, drawingSelec
 
 describe('pricing', () => {
   it.each([
-    ['1 couple', { category: 'couple', ticketQuantity: 1 }, 52000],
-    ['2 couple', { category: 'couple', ticketQuantity: 2 }, 104000],
-    ['1 single', { category: 'single', ticketQuantity: 1 }, 21000],
-    ['3 single', { category: 'single', ticketQuantity: 3 }, 63000],
-    ['1 couple + rangoli', { category: 'couple', ticketQuantity: 1, rangoliSelected: true }, 63000],
-    ['1 single + drawing', { category: 'single', ticketQuantity: 1, drawingSelected: true }, 32000],
-    ['2 single + both', { category: 'single', ticketQuantity: 2, rangoliSelected: true, drawingSelected: true }, 64000],
-    ['7 couple (max)', { category: 'couple', ticketQuantity: 7 }, 364000],
+    ['1 couple', { category: 'couple', ticketQuantity: 1 }, 53000],
+    ['2 couple', { category: 'couple', ticketQuantity: 2 }, 106000],
+    ['1 single', { category: 'single', ticketQuantity: 1 }, 22000],
+    ['3 single', { category: 'single', ticketQuantity: 3 }, 66000],
+    ['1 couple + rangoli', { category: 'couple', ticketQuantity: 1, rangoliSelected: true }, 64000],
+    ['1 single + drawing', { category: 'single', ticketQuantity: 1, drawingSelected: true }, 33000],
+    ['2 single + both', { category: 'single', ticketQuantity: 2, rangoliSelected: true, drawingSelected: true }, 66000],
+    ['7 couple (max)', { category: 'couple', ticketQuantity: 7 }, 371000],
   ])('%s', (_label, input, expected) => {
     expect(total(input)).toBe(expected);
   });
@@ -24,10 +24,10 @@ describe('pricing', () => {
     const b = calculatePricing({ category: 'couple', ticketQuantity: 2, rangoliSelected: true, drawingSelected: false });
     expect(b).toMatchObject({
       ticketSubtotalPaise: 99800,
-      ticketPlatformFeePaise: 4200,
+      ticketPlatformFeePaise: 6200,
       competitionSubtotalPaise: 9900,
       competitionPlatformFeePaise: 1100,
-      totalAmountPaise: 115000,
+      totalAmountPaise: 117000,
       currency: 'INR',
     });
     expect(b.competitions).toHaveLength(1);
@@ -35,13 +35,13 @@ describe('pricing', () => {
   });
 
   it('charges competitions once per registration, not per ticket', () => {
-    expect(total({ category: 'single', ticketQuantity: 5, rangoliSelected: true })).toBe(5 * 21000 + 11000);
+    expect(total({ category: 'single', ticketQuantity: 5, rangoliSelected: true })).toBe(5 * 22000 + 11000);
   });
 
   it('supports per-ticket competition charging when configured', () => {
     const pricing = { ...DEFAULT_PRICING, competitionChargeMode: 'per_ticket' };
     const b = calculatePricing({ category: 'single', ticketQuantity: 3, rangoliSelected: true }, pricing);
-    expect(b.totalAmountPaise).toBe(3 * 21000 + 3 * 11000);
+    expect(b.totalAmountPaise).toBe(3 * 22000 + 3 * 11000);
   });
 
   it.each([0, 8, 2.5, -1])('rejects ticket quantity %s', (ticketQuantity) => {

@@ -6,15 +6,15 @@ import { env } from './env.js';
  * Override for future events with PRICING_CONFIG_JSON (same shape).
  */
 export const DEFAULT_PRICING = Object.freeze({
-  version: '2026-v1',
+  version: '2026-v2',
   currency: 'INR',
   maxTicketsPerBooking: 7,
   // 'per_registration' charges each selected competition once per booking;
   // 'per_ticket' multiplies competition fees by the ticket quantity.
   competitionChargeMode: 'per_registration',
   categories: {
-    couple: { label: 'Couple', basePaise: 49900, platformFeePaise: 2100 },
-    single: { label: 'Single', basePaise: 19900, platformFeePaise: 1100 },
+    couple: { label: 'Couple', basePaise: 49900, platformFeePaise: 3100 },
+    single: { label: 'Single', basePaise: 19900, platformFeePaise: 2100 },
   },
   competitions: {
     rangoli: { label: 'Rangoli Competition', basePaise: 9900, platformFeePaise: 1100 },

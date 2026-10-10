@@ -34,8 +34,8 @@ Dandiya_Nights/
 
 | Item | Base | Platform fee | Total |
 |---|---:|---:|---:|
-| Couple ticket | ₹499 | ₹21 | ₹520 |
-| Single ticket | ₹199 | ₹11 | ₹210 |
+| Couple ticket | ₹499 | ₹31 | ₹530 |
+| Single ticket | ₹199 | ₹21 | ₹220 |
 | Rangoli Competition | ₹99 | ₹11 | ₹110 |
 | Drawing Competition | ₹99 | ₹11 | ₹110 |
 

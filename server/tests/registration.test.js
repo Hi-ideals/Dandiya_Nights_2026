@@ -12,7 +12,7 @@ describe('POST /api/registrations', () => {
     expect(res.status).toBe(201);
     expect(number).toMatch(/^DN\d{2}[A-Z2-9]{6}$/);
     expect(res.body).not.toHaveProperty('accessToken');
-    expect(res.body.breakdown.totalAmountPaise).toBe(104000);
+    expect(res.body.breakdown.totalAmountPaise).toBe(106000);
 
     const stored = ctx.db.get('registrations', number);
     expect(stored).toMatchObject({
@@ -23,19 +23,19 @@ describe('POST /api/registrations', () => {
       ticketQuantity: 2,
       paymentStatus: 'pending',
       status: 'pending_payment',
-      totalAmountPaise: 104000, // client-supplied amount ignored
+      totalAmountPaise: 106000, // client-supplied amount ignored
       ticketSubtotalPaise: 99800,
-      ticketPlatformFeePaise: 4200,
+      ticketPlatformFeePaise: 6200,
       currency: 'INR',
     });
-    expect(stored.pricingSnapshot.version).toBe('2026-v1');
+    expect(stored.pricingSnapshot.version).toBe('2026-v2');
     expect(ctx.db.all('tickets')).toHaveLength(0);
   });
 
   it('a Dandiya registration never includes competitions', async () => {
     const { res, number } = await ctx.register({ category: 'single', ticketQuantity: 2, rangoliSelected: true, drawingSelected: true });
     expect(res.status).toBe(201);
-    expect(res.body.breakdown.totalAmountPaise).toBe(42000);
+    expect(res.body.breakdown.totalAmountPaise).toBe(44000);
     expect(ctx.db.get('registrations', number)).toMatchObject({ type: 'dandiya', rangoliSelected: false, drawingSelected: false });
   });
 
